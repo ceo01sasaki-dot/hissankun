@@ -51,7 +51,7 @@ export function buildPlan({a,b,op},settings={}){
     const x=digit(A,k),v=x*y+carry,marks=[];put(marks,k===A.length-1?v:v%10,row,R-k-j,'answer');
     if(k===0&&j>0)marks.unshift({kind:'clear-carry'});
     if(v>=10&&k<A.length-1)marks.push(carryMark(row,R-k-j-1,Math.floor(v/10)));
-    step(v,row,R-k-j,`${places[j]}の位の ${y}を かけよう。${x}×${y}${carry?'＋'+carry+'（くりあがり）':''}は？`,marks,[[3,R-k],[4,R-j]],{hint:`${x}が ${y}こ分だよ。${carry?'さいごに '+carry+'を たそう。':''}`,parts:[x,y,carry]});carry=Math.floor(v/10);
+    step(v,row,R-k-j,`${places[j]}の位の ${y}を かけよう。${x}×${y}${carry?'＋'+carry+'（くりあがり）':''}は？`,marks,[[3,R-k],[4,R-j]],{hint:`${x}が ${y}こ分だよ。${carry?'さいごに '+carry+'を たそう。':''}`,parts:[x,y,carry],table:{base:y,factor:x,carry}});carry=Math.floor(v/10);
    }
    for(let z=0;z<j;z++)steps.at(-1).marks.push({row,col:R-z,text:0,kind:'answer'});
   }
@@ -69,9 +69,9 @@ export function buildPlan({a,b,op},settings={}){
   for(let k=0;k<A.length;k++){
    const current=rem*10+Number(A[k]),col=start+k,q=Math.floor(current/b),product=q*b,r=current-product;
    if(!started&&q===0&&k<A.length-1){rem=current;continue;}started=true;
-   step(q,2,col,`たてる：${current}÷${b}の こたえを 上に たてよう。`,[{row:2,col,text:q,kind:'answer'}],[[3,col]],{hint:`${b}の だんを 思い出そう。${b}×□ が ${current}を こえない 一番大きな数は？`});
+   step(q,2,col,`たてる：${current}÷${b}の こたえを 上に たてよう。`,[{row:2,col,text:q,kind:'answer'}],[[3,col]],{hint:`${b}の だんを 思い出そう。${b}×□ が ${current}を こえない 一番大きな数は？`,table:{base:b,factor:q,dividend:current}});
    const mult=[];put(mult,product,row,col);line(mult,row,col-Math.max(String(current).length,String(product).length)+1,col);
-   step(product,row,col,`かける：${q}×${b}は いくつかな？`,mult,[[2,col],[3,start-2]],{hint:`いま たてた ${q}と、わる数の ${b}を かけよう。`});
+   step(product,row,col,`かける：${q}×${b}は いくつかな？`,mult,[[2,col],[3,start-2]],{hint:`いま たてた ${q}と、わる数の ${b}を かけよう。`,table:{base:b,factor:q}});
    const sub=[];put(sub,r,row+1,col,'answer');
    step(r,row+1,col,`ひく：${current}−${product}を しよう。`,sub,[[row,col]],{hint:`のこりが ${b}より 小さくなるか 確かめよう。`});
    if(k<A.length-1)step(Number(A[k+1]),row+1,col+1,`おろす：つぎの ${A[k+1]}を 下に おろそう。`,[{row:row+1,col:col+1,text:A[k+1]}],[[3,col+1]],{hint:'つぎの位の 数字を そのまま 赤いわくに 入れよう。'});

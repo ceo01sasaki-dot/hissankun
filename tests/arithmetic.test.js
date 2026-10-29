@@ -13,3 +13,8 @@ test('multiplication includes shifted partial products and their sum',()=>{const
 test('division practices quotient, product, subtraction and bring down with remainder',()=>{const p=plan('125/4');assert.deepEqual(p.steps.map(s=>s.expected),[3,12,0,5,1,4,1]);assert.equal(rowValue(p,2),31);assert.equal(p.remainder,1);const z=plan('1005/5');assert.equal(rowValue(z,2),201);assert.equal(z.remainder,0);});
 test('settings change carry and borrow locations',()=>{assert.ok(plan('28+17',{carry:'down'}).steps[0].marks.some(m=>m.kind==='carry-down'&&m.row===5));assert.ok(plan('32-18',{borrow:'side'}).steps[0].marks.some(m=>m.kind==='borrow-side'&&m.row===3));});
 test('representative operand ranges produce correct written results',()=>{for(let a=0;a<100;a+=7)for(let b=0;b<100;b+=9){assert.equal(rowValue(plan(`${a}+${b}`),5),a+b);if(a>=b)assert.equal(rowValue(plan(`${a}-${b}`),5),a-b);const m=plan(`${a}*${b}`);assert.equal(rowValue(m,5+(String(b).length>1?String(b).length:0)),a*b);if(b&&a>=b){const d=plan(`${a}/${b}`);assert.equal(rowValue(d,2),Math.floor(a/b));assert.equal(d.remainder,a%b);}}});
+test('multiplication and division assists expose the matching times-table operands',()=>{
+ const m=plan('28*7');assert.deepEqual(m.steps[0].table,{base:7,factor:8,carry:0});assert.deepEqual(m.steps[1].table,{base:7,factor:2,carry:5});
+ const d=plan('125/4');assert.deepEqual(d.steps[0].table,{base:4,factor:3,dividend:12});assert.deepEqual(d.steps[1].table,{base:4,factor:3});
+ assert.deepEqual(plan('10/2').steps.at(-3).table,{base:2,factor:5,dividend:10});
+});
