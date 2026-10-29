@@ -62,6 +62,7 @@ test('division colors every digit of the current dividend and divisor across pha
  const p=plan('856/23'),quotients=p.steps.filter(s=>s.phase==='quotient');
  assert.deepEqual(quotients[0].operandHighlights.dividend,[[2,5],[2,4]]);
  assert.deepEqual(quotients[1].operandHighlights.dividend,[[4,6],[4,5],[4,4]]);
+ assert.deepEqual(p.steps.find(s=>s.phase==='bring-down').operandHighlights.dividend,[[4,5],[4,4],[2,6]]);
  for(const s of p.steps.filter(s=>s.operandHighlights))assert.deepEqual(s.operandHighlights.divisor,[[2,3],[2,2]]);
  for(const phase of ['intro','quotient','product','subtract','bring-down'])assert.ok(p.steps.find(s=>s.phase===phase).operandHighlights);
  assert.deepEqual(plan('1005/5').steps.find(s=>s.phase==='quotient'&&s.expected===0).operandHighlights.dividend,[[2,5]]);

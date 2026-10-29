@@ -104,7 +104,7 @@ export function buildPlan({a,b,op},settings={}){
     const nextDigit=Number(A[k+1]),nextValue=working*10+nextDigit,marks=[];
     if(nextValue!==0)marks.push({row:workingRow,col:col+1,text:nextDigit,kind:'working'});
     input(nextDigit,workingRow,col+1,'bring-down',`おろす：つぎの ${nextDigit}を 下に おろそう。`,marks,[[2,col+1]],
-     {hint:'上の数字を、そのまま 同じ位の 下へ おろそう。',arrow:{from:[2,col+1],to:[workingRow,col+1]},
+     {hint:'上の数字を、そのまま 同じ位の 下へ おろそう。',targetDividend:(working>0?cells(workingRow,col,String(working).length):[]).concat([[2,col+1]]),arrow:{from:[2,col+1],to:[workingRow,col+1]},
       success:nextValue===0?'0を おろしたね。つぎは 商に 0を たてよう。':`${nextValue}に なったね。つぎの商を 考えよう。`});
     working=nextValue;
    }
@@ -114,6 +114,7 @@ export function buildPlan({a,b,op},settings={}){
   let activeDividend=cells(2,firstCol+prefixLength-1,prefixLength);
   for(const stage of steps){
    if(stage.phase==='finish')activeDividend=stage.highlight;
+   if(stage.phase==='bring-down')activeDividend=stage.targetDividend;
    if(stage.phase==='quotient')activeDividend=stage.dividend===0?[[2,stage.col]]:cells(stage.highlight[0][0],stage.col,String(stage.dividend).length);
    stage.operandHighlights={dividend:activeDividend.map(cell=>[...cell]),divisor:divisorCells.map(cell=>[...cell])};
   }
