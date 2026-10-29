@@ -64,20 +64,54 @@ export function buildPlan({a,b,op},settings={}){
   }
  }
  if(op==='/'){
-  const start=5;put(base,A,3,start+A.length-1);put(base,B,3,start-2);base.push({row:3,col:start-1,end:start+A.length-1,kind:'division'});
-  let rem=0,row=4,started=false;
-  for(let k=0;k<A.length;k++){
-   const current=rem*10+Number(A[k]),col=start+k,q=Math.floor(current/b),product=q*b,r=current-product;
-   if(!started&&q===0&&k<A.length-1){rem=current;continue;}started=true;
-   step(q,2,col,`たてる：${current}÷${b}の こたえを 上に たてよう。`,[{row:2,col,text:q,kind:'answer'}],[[3,col]],{hint:`${b}の だんを 思い出そう。${b}×□ が ${current}を こえない 一番大きな数は？`,table:{base:b,factor:q,dividend:current}});
-   const mult=[];put(mult,product,row,col);line(mult,row,col-Math.max(String(current).length,String(product).length)+1,col);
-   step(product,row,col,`かける：${q}×${b}は いくつかな？`,mult,[[2,col],[3,start-2]],{hint:`いま たてた ${q}と、わる数の ${b}を かけよう。`,table:{base:b,factor:q}});
-   const sub=[];put(sub,r,row+1,col,'answer');
-   step(r,row+1,col,`ひく：${current}−${product}を しよう。`,sub,[[row,col]],{hint:`のこりが ${b}より 小さくなるか 確かめよう。`});
-   if(k<A.length-1)step(Number(A[k+1]),row+1,col+1,`おろす：つぎの ${A[k+1]}を 下に おろそう。`,[{row:row+1,col:col+1,text:A[k+1]}],[[3,col+1]],{hint:'つぎの位の 数字を そのまま 赤いわくに 入れよう。'});
-   rem=r;row+=2;
+  // The divisor touches the bracket; each dividend digit occupies one cell.
+  const firstCol=B.length+2,lastCol=firstCol+A.length-1;
+  put(base,B,3,firstCol-1);put(base,A,3,lastCol);
+  base.push({row:3,col:firstCol,end:lastCol,kind:'division'});
+  const cells=(row,right,length)=>Array.from({length},(_,i)=>[row,right-i]);
+  const divisorCells=cells(3,firstCol-1,B.length);
+  const explain=(message,phase='intro',highlight=[])=>steps.push({type:'info',phase,message,highlight,marks:[]});
+  const input=(expected,row,col,phase,message,marks,highlight,extra={})=>{
+   const width=String(expected).length;
+   step(expected,row,col,message,marks,highlight,{type:'input',phase,width,maxLength:width,...extra});
+  };
+  explain('わり算は「たてる → かける → ひく → おろす」を くりかえすよ。');
+  let prefixLength=1;
+  while(Number(A.slice(0,prefixLength))<b)prefixLength++;
+  let working=Number(A.slice(0,prefixLength)),workingRow=3,productRow=4;
+  if(prefixLength>1)explain(`${A.slice(0,prefixLength-1)}では ${b}で われないね。${working}で 考えよう。`,'intro',cells(3,firstCol+prefixLength-1,prefixLength));
+  for(let k=prefixLength-1;k<A.length;k++){
+   const col=firstCol+k,quotient=Math.floor(working/b),hasNext=k<A.length-1;
+   input(quotient,2,col,'quotient',`たてる：${working}÷${b}の こたえを、${A[k]}の 上に たてよう。`,
+    [{row:2,col,text:quotient,kind:'answer'}],cells(workingRow,col,String(working).length).concat(divisorCells),
+    {hint:`${b}×□ が ${working}を こえない、いちばん 大きい □を さがそう。`,table:{base:b,factor:quotient,dividend:working},dividend:working,divisor:b,success:quotient===0?`${working}は ${b}より 小さいから、商に 0を たてるよ。`:undefined});
+   // A zero belongs in the quotient. Do not introduce a spurious 0×b / subtraction row.
+   if(quotient!==0){
+    const product=quotient*b,remainder=working-product,productMarks=[];
+    put(productMarks,product,productRow,col,'working');
+    line(productMarks,productRow,col-Math.max(String(working).length,String(product).length)+1,col);
+    input(product,productRow,col,'product',`かける：たてた ${quotient}と、わる数の ${b}を かけよう。`,productMarks,[[2,col],...divisorCells],
+     {hint:`${quotient}×${b}の こたえを、位を そろえて 下に かこう。`,table:{base:b,factor:quotient},success:`${quotient}×${b}＝${product} だね。`});
+    const remainderMarks=[];
+    if(remainder!==0||!hasNext)put(remainderMarks,remainder,productRow+1,col,'working');
+    input(remainder,productRow+1,col,'subtract',`ひく：${working}−${product}を しよう。`,remainderMarks,
+     cells(workingRow,col,String(working).length).concat(cells(productRow,col,String(product).length)),
+     {hint:`${working}から ${product}を ひこう。のこりは ${b}より 小さくなるよ。`,
+      success:remainder===0&&hasNext?'0だね。とちゅうの 0は かかずに、つぎの数を おろそう。':undefined});
+    working=remainder;workingRow=productRow+1;productRow+=2;
+   }
+   if(hasNext){
+    const nextDigit=Number(A[k+1]),nextValue=working*10+nextDigit,marks=[];
+    if(nextValue!==0)marks.push({row:workingRow,col:col+1,text:nextDigit,kind:'working'});
+    input(nextDigit,workingRow,col+1,'bring-down',`おろす：つぎの ${nextDigit}を 下に おろそう。`,marks,[[3,col+1]],
+     {hint:'上の数字を、そのまま 同じ位の 下へ おろそう。',arrow:{from:[3,col+1],to:[workingRow,col+1]},
+      success:nextValue===0?'0を おろしたね。つぎは 商に 0を たてよう。':`${nextValue}に なったね。つぎの商を 考えよう。`});
+    working=nextValue;
+   }
   }
+  explain(a%b===0?'あまりは 0。わりきれたね！':`のこりの ${a%b}は ${b}より 小さいから おわり。あまりは ${a%b}だよ。`,'finish',cells(workingRow,lastCol,String(a%b).length));
  }
+
  const result=op==='+'?a+b:op==='-'?a-b:op==='*'?a*b:Math.floor(a/b);
  return {base,steps,result,remainder:op==='/'?a%b:0};
 }

@@ -1,13 +1,14 @@
 {
   "name": "hissankun",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
     "test": "node tests/run.js",
-    "check": "node --check app.js && node --check arithmetic.js && node --check sound.js"
+    "check": "node --check app.js && node --check arithmetic.js && node --check sound.js",
+    "build:html": "python3 scripts/build_html.py"
   },
   "engines": {
     "node": ">=20"

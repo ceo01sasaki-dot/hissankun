@@ -27,3 +27,6 @@ dialog{max-height:calc(100dvh - 24px);overflow-y:auto}
  .mascot svg{max-height:160px}
  footer{margin-top:18px}
 }
+
+#entry.numeric{padding:0;gap:0}#entry.numeric .input-digit{flex:0 0 calc(100% / var(--input-cells));text-align:center}#entry.numeric:after{position:absolute;right:3px;margin-left:0}.division-flow{display:flex;gap:5px;flex-wrap:wrap;align-items:center}.division-flow[hidden]{display:none}.division-flow span{padding:5px 9px;border-radius:8px;font-size:16px;line-height:1.3;color:#7b8078;background:#ffffff66;font-weight:700}.division-flow span.active{background:#fff1a5;color:#5e5227;box-shadow:0 0 0 2px #d5b957}
+#paper{container-type:inline-size}#entry.numeric{font-size:4.7991cqw}

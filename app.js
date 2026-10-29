@@ -1,11 +1,11 @@
-import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.2.0';
-import {createSoundPlayer} from './sound.js?v=1.2.0';
+import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.3.0';
+import {createSoundPlayer} from './sound.js?v=1.3.0';
 const $=id=>document.getElementById(id),storageKey='sasakky-hissan-v1';
 let settings={carry:'up',borrow:'up',sound:true},state={formula:'',problem:null,index:0,input:''},history=[],future=[],plan=null,feedback='',feedbackType='',timer;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const display=s=>[...s].map(c=>symbols[c]||c).join('');
 const copy=s=>structuredClone(s);
-try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved){settings={...settings,...saved.settings};if(saved.state&&typeof saved.state.formula==='string'){state=saved.state;if(state.problem){const p=parseFormula(`${state.problem.a}${state.problem.op}${state.problem.b}`);if(p.error)throw Error();state.problem=p;plan=buildPlan(p,settings);if(!Number.isInteger(state.index)||state.index<0||state.index>plan.steps.length)state.index=0;}}}}catch{state={formula:'',problem:null,index:0,input:''};plan=null;}
+try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved){settings={...settings,...saved.settings};if(saved.state&&typeof saved.state.formula==='string'){state=saved.state;if(state.problem){const p=parseFormula(`${state.problem.a}${state.problem.op}${state.problem.b}`);if(p.error)throw Error();state.problem=p;plan=buildPlan(p,settings);if(p.op==='/'&&state.divisionVersion!==2){state.index=0;state.input='';state.divisionVersion=2;}if(!Number.isInteger(state.index)||state.index<0||state.index>plan.steps.length)state.index=0;}}}}catch{state={formula:'',problem:null,index:0,input:''};plan=null;}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify({settings,state}));}catch{}}
 function snapshot(){history.push(copy(state));if(history.length>200)history.shift();future=[];}
 const sound=createSoundPlayer({enabled:()=>settings.sound});
@@ -18,7 +18,7 @@ function render({paper=true}={}){
  const c=current();
  if(paper){
  const svg=[];
- svg.push('<defs><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" stroke-width="1.5"/></pattern></defs><rect width="896" height="672" fill="url(#big)"/>');
+ svg.push('<defs><marker id="down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#258b9e"/></marker><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" stroke-width="1.5"/></pattern></defs><rect width="896" height="672" fill="url(#big)"/>');
  for(let n=5;n<=30;n+=5){svg.push(`<text x="${n*28}" y="-7" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="${n*28}" y="690" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text>`);}
  for(let n=5;n<=20;n+=5)svg.push(`<text x="-8" y="${n*28+4}" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="906" y="${n*28+4}" fill="#2997c8" font-size="13">${n}</text>`);
  svg.push('<text x="28" y="20" text-anchor="middle" font-size="12" fill="#27334a">しき</text><text x="28" y="50" text-anchor="middle" font-size="35" font-weight="bold" fill="#27334a">式</text>');
@@ -27,30 +27,45 @@ function render({paper=true}={}){
  if(c)for(const [row,col]of c.highlight||[])svg.push(`<rect x="${col*56+2}" y="${row*56+2}" width="52" height="52" rx="6" fill="#ffdc6270"/>`);
  const formula=plan?`${state.problem.a}${state.problem.op}${state.problem.b}`:state.formula;
  if(plan)[...display(formula)].forEach((text,k)=>marks.push({row:0,col:k+1,text}));
- for(const m of marks){const x=m.col*56,y=m.row*56;if(m.kind==='line'){svg.push(`<path d="M${x} ${y+57}H${(m.end+1)*56}" stroke="#283344" stroke-width="3"/>`);continue;}if(m.kind==='division'){svg.push(`<path d="M${x+56} ${y}H${(m.end+1)*56}M${x+56} ${y}Q${x+40} ${y+28} ${x+56} ${y+56}" fill="none" stroke="#283344" stroke-width="3"/>`);continue;}
- const small=['carry','carry-down','borrow','borrow-side'].includes(m.kind),side=m.kind?.endsWith('side')||m.kind==='carry-down';svg.push(`<text x="${x+(side?10:28)}" y="${y+(side?18:small?49:46)}" text-anchor="middle" font-size="${small?23:43}" font-weight="${small?600:700}" fill="${small?'#258b9e':m.kind==='answer'?'#244a91':'#263344'}">${escape(m.text)}</text>`);
+ for(const m of marks){const x=m.col*56,y=m.row*56;if(m.kind==='line'){svg.push(`<path d="M${x} ${y+57}H${(m.end+1)*56}" stroke="#283344" stroke-width="3" stroke-linecap="round"/>`);continue;}if(m.kind==='division'){svg.push(`<path data-mark="division" d="M${x-2} ${y}H${(m.end+1)*56-4}M${x-2} ${y}Q${x+18} ${y+28} ${x-2} ${y+56}" fill="none" stroke="#283344" stroke-width="3" stroke-linecap="round"/>`);continue;}
+ const small=['carry','carry-down','borrow','borrow-side'].includes(m.kind),side=m.kind?.endsWith('side')||m.kind==='carry-down';svg.push(`<text data-kind="${m.kind||'digit'}" data-row="${m.row}" data-col="${m.col}" x="${x+(side?10:28)}" y="${y+(side?18:small?49:46)}" text-anchor="middle" font-size="${small?23:43}" font-weight="${small?600:700}" fill="${small?'#258b9e':['answer','working'].includes(m.kind)?'#244a91':'#263344'}">${escape(m.text)}</text>`);
+ }
+ if(c?.arrow&&c.arrow.to[0]>c.arrow.from[0]){
+  const x=c.arrow.from[1]*56+49,y1=(c.arrow.from[0]+1)*56+5,y2=c.arrow.to[0]*56+20;
+  svg.push(`<path data-mark="bring-down-arrow" d="M${x} ${y1}V${y2}" fill="none" stroke="#258b9e" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#down-arrow)"/>`);
+ }
+ if(plan&&state.problem.op==='/'&&state.index===plan.steps.length){
+  const quotientCells=plan.steps.filter(s=>s.phase==='quotient');
+  const left=quotientCells[0].col*56,right=(quotientCells.at(-1).col+1)*56;
+  svg.push(`<rect data-mark="quotient-result" x="${left+2}" y="114" width="${right-left-4}" height="52" rx="20" fill="none" stroke="#ef6274" stroke-width="3"/>`);
  }
  $('grid').innerHTML=svg.join('');
  }
  const done=plan&&state.index>=plan.steps.length;
- $('entry').classList.toggle('hidden',!!done);
- const row=c?.row||0,col=c?.col||1,width=plan?Math.max(1,state.input.length):9;
+ $('entry').classList.toggle('hidden',!!done||c?.type==='info');
+ $('entry').classList.toggle('numeric',!!plan);
+ const row=c?.row||0,col=c?.col||1,width=plan?(c?.width||Math.max(1,state.input.length)):9;
  Object.assign($('entry').style,{top:(row/12*100)+'%',left:((col-(plan?width-1:0))/16*100)+'%',width:(width/16*100)+'%'});
- $('entry').textContent=plan?state.input:display(state.formula);
+ $('entry').style.setProperty('--input-cells',width);
+ $('entry').setAttribute('aria-label','現在の入力：'+(plan?state.input:display(state.formula)));
+ if(plan){$('entry').innerHTML=Array.from({length:width-state.input.length},()=>'<span class="input-digit" aria-hidden="true"></span>').join('')+[...state.input].map(d=>`<span class="input-digit">${escape(d)}</span>`).join('');}
+ else $('entry').textContent=display(state.formula);
  let message=feedback||(!plan?(state.formula?'入れたら「けってい」を おそう。':'まず <ruby>赤<rt>あか</rt></ruby>い わくに <ruby>式<rt>しき</rt></ruby>を <ruby>入<rt>い</rt></ruby>れよう'):done?'ぜんぶ できたね！<br>よく がんばりました。':escape(c.message));
  $('message').innerHTML=`${plan&&!done?`<span class="progress">${state.index+1} / ${plan.steps.length} ステップ</span>`:''}<span class="${feedbackType}">${message}</span>`;
- $('actions').innerHTML=done?'<button class="gloss green" data-action="new">あたらしい式</button><button class="gloss gray" data-action="retry">もういちど</button>':plan?'<button class="gloss pink" data-action="hint">アシストを みる？</button>':'';
+ $('actions').innerHTML=done?'<button class="gloss green" data-action="new">あたらしい式</button><button class="gloss gray" data-action="retry">もういちど</button>':c?.type==='info'?'<button class="gloss green" data-action="next">つぎへ 〉</button>':plan?'<button class="gloss pink" data-action="hint">アシストを みる？</button>':'';
  $('undo').disabled=history.length===0;$('redo').disabled=future.length===0;
- document.querySelectorAll('[data-key]').forEach(button=>{button.disabled=!!done||(!!plan&&'+-*/'.includes(button.dataset.key));});
+ document.querySelectorAll('[data-key]').forEach(button=>{button.disabled=!!done||(!!plan&&'+-*/'.includes(button.dataset.key))||(c?.type==='info'&&button.dataset.key!=='Enter');});
+ const flow=$('division-flow');flow.hidden=!plan||state.problem.op!=='/'||!!done;
+ for(const badge of flow.querySelectorAll('[data-phase]'))badge.classList.toggle('active',badge.dataset.phase===c?.phase);
  $('status').textContent=plan?(done?`${display(`${state.problem.a}${state.problem.op}${state.problem.b}`)} ＝ ${plan.result}${plan.remainder?' あまり '+plan.remainder:''}`:'学習のとちゅうも 自動で 保存されます。'):'じぶんの ペースで、ひとつずつ。';save();
 }
 function key(k){
  if($('dialog').open)return;
  if(k==='Enter'){confirm();return;}
- if(plan&&state.index>=plan.steps.length)return;
+ if(plan&&(state.index>=plan.steps.length||current()?.type==='info'))return;
  if(k==='Backspace'){if(!(plan?state.input:state.formula))return;snapshot();if(plan)state.input=state.input.slice(0,-1);else state.formula=state.formula.slice(0,-1);stopFeedback();render({paper:false});sound();return;}
  if(!/^[0-9+\-*/]$/.test(k))return;
- if(plan){if(!/^\d$/.test(k))return;if(state.input.length>=4)return;snapshot();state.input+=k;}
+ if(plan){if(!/^\d$/.test(k))return;if(state.input.length>=(current()?.maxLength||4))return;snapshot();state.input+=k;}
  else{
   const m=/^(\d*)([+\-*/]?)(\d*)$/.exec(state.formula);if(!m)return;
   let [,a,op,b]=m;
@@ -62,9 +77,13 @@ function key(k){
  stopFeedback();render({paper:false});sound();
 }
 function confirm(){
- if(!plan){const p=parseFormula(state.formula);if(p.error)return fail(p.error);snapshot();state.problem=p;state.index=0;state.input='';plan=buildPlan(p,settings);stopFeedback();sound('ok');render();return;}
- const c=current();if(!c)return;if(state.input==='')return fail('赤いわくに こたえを 入れてね。');
- if(Number(state.input)!==c.expected){snapshot();state.input='';return fail('おしい！ もういちど 考えてみよう。');}
+ if(!plan){const p=parseFormula(state.formula);if(p.error)return fail(p.error);snapshot();state.problem=p;state.divisionVersion=2;state.index=0;state.input='';plan=buildPlan(p,settings);stopFeedback();sound('ok');render();return;}
+ const c=current();if(!c)return;if(c.type==='info'){snapshot();state.index++;state.input='';stopFeedback();render();if(!current()){sound('clear');confetti();completion();}else sound();return;}if(state.input==='')return fail('赤いわくに こたえを 入れてね。');
+ if(Number(state.input)!==c.expected){
+  let message='おしい！ もういちど 考えてみよう。';
+  if(c.phase==='quotient')message=Number(state.input)*c.divisor>c.dividend?'商が 大きすぎるよ。かけた数が、わられる数を こえないようにしよう。':'商が 小さいみたい。もう1つ 大きい数を たてられるかな？';
+  snapshot();state.input='';return fail(message);
+ }
  snapshot();state.index++;state.input='';feedback=c.success||'せいかい！ そのちょうし！';feedbackType='success';sound('ok');animate('mascot','hop');render();clearTimeout(timer);
  if(!current()){sound('clear');confetti();timer=setTimeout(()=>{stopFeedback();render();completion();},800);}else timer=setTimeout(()=>{stopFeedback();render();},1100);
 }
@@ -76,7 +95,7 @@ function completion(){modal(`<div class="celebrate">✦ できたね！ ✦</div
 function confetti(){const el=document.createElement('div');el.className='confetti';for(let i=0;i<50;i++){const p=document.createElement('i');p.style.cssText=`left:${Math.random()*100}%;background:${['#6bc6ce','#f2bb5c','#b7a0df','#f3a7b7'][i%4]};animation-delay:${Math.random()*.7}s`;el.append(p);}document.body.append(el);setTimeout(()=>el.remove(),4000);}
 function showSettings(){
  const group=(label,name,values)=>`<h3>${label}</h3><div class="options">${values.map(([v,t])=>`<button data-setting="${name}" data-value="${v}" aria-pressed="${String(settings[name])===v}">${t}</button>`).join('')}</div>`;
- modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.2.0<br>つくった人：ささっきー</p>`);
+ modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.3.0<br>つくった人：ささっきー</p>`);
 }
 function hint(){
  const c=current();if(!c)return;
@@ -106,7 +125,7 @@ $('undo').onclick=()=>{if(!history.length)return;future.push(copy(state));restor
 $('redo').onclick=()=>{if(!future.length)return;history.push(copy(state));restore(future.pop());sound();};
 $('reset').onclick=()=>{if(!state.formula&&!plan)return;modal('<h2 id="dialog-title">はじめから やりなおす？</h2><p>いまの式を けして、あたらしい式を 入れられるよ。</p><button class="gloss sand close" data-action="new">リセットする</button><button class="gloss gray close" data-action="close">このまま つづける</button>');};
 $('settings').onclick=showSettings;
-function action(e){const b=e.target.closest('[data-action],[data-setting]');if(!b)return;sound();if(b.dataset.setting){const name=b.dataset.setting;settings[name]=name==='sound'?b.dataset.value==='true':b.dataset.value;if(plan)plan=buildPlan(state.problem,settings);close();render();showSettings();return;}switch(b.dataset.action){case'close':close();break;case'new':close();reset();break;case'retry':snapshot();state.index=0;state.input='';stopFeedback();render();break;case'hint':hint();break;case'reveal':{const c=current();close();feedback=`こたえは ${c.expected}だよ。赤いわくに 入れてみよう。`;feedbackType='';render();break;}}}
+function action(e){const b=e.target.closest('[data-action],[data-setting]');if(!b)return;sound();if(b.dataset.setting){const name=b.dataset.setting;settings[name]=name==='sound'?b.dataset.value==='true':b.dataset.value;if(plan)plan=buildPlan(state.problem,settings);close();render();showSettings();return;}switch(b.dataset.action){case'close':close();break;case'next':confirm();break;case'new':close();reset();break;case'retry':snapshot();state.index=0;state.input='';stopFeedback();render();break;case'hint':hint();break;case'reveal':{const c=current();close();feedback=`こたえは ${c.expected}だよ。赤いわくに 入れてみよう。`;feedbackType='';render();break;}}}
 $('actions').addEventListener('click',action);$('dialog-content').addEventListener('click',action);
 $('dialog').addEventListener('click',e=>{if(e.target===$('dialog')){const r=$('dialog').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}});
 document.addEventListener('keydown',e=>{if($('dialog').open)return;const k=e.key==='Delete'?'Backspace':e.key==='x'?'*':e.key;if(/^[0-9+\-*/]$/.test(k)||['Enter','Backspace'].includes(k)){e.preventDefault();key(k);}});
