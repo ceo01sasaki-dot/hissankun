@@ -1,0 +1,15 @@
+{
+  "name": "hissankun",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "test": "node tests/arithmetic.test.js",
+    "check": "node --check app.js && node --check arithmetic.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
