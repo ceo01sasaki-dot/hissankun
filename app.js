@@ -1,5 +1,5 @@
-import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.1.0';
-import {createSoundPlayer} from './sound.js?v=1.1.0';
+import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.2.0';
+import {createSoundPlayer} from './sound.js?v=1.2.0';
 const $=id=>document.getElementById(id),storageKey='sasakky-hissan-v1';
 let settings={carry:'up',borrow:'up',sound:true},state={formula:'',problem:null,index:0,input:''},history=[],future=[],plan=null,feedback='',feedbackType='',timer;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,9 +18,9 @@ function render({paper=true}={}){
  const c=current();
  if(paper){
  const svg=[];
- svg.push('<defs><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" stroke-width="1.5"/></pattern></defs><rect width="1008" height="728" fill="url(#big)"/>');
- for(let n=5;n<=35;n+=5){svg.push(`<text x="${n*28}" y="-7" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="${n*28}" y="746" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text>`);}
- for(let n=5;n<=25;n+=5)svg.push(`<text x="-8" y="${n*28+4}" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="1018" y="${n*28+4}" fill="#2997c8" font-size="13">${n}</text>`);
+ svg.push('<defs><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" stroke-width="1.5"/></pattern></defs><rect width="896" height="672" fill="url(#big)"/>');
+ for(let n=5;n<=30;n+=5){svg.push(`<text x="${n*28}" y="-7" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="${n*28}" y="690" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text>`);}
+ for(let n=5;n<=20;n+=5)svg.push(`<text x="-8" y="${n*28+4}" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="906" y="${n*28+4}" fill="#2997c8" font-size="13">${n}</text>`);
  svg.push('<text x="28" y="20" text-anchor="middle" font-size="12" fill="#27334a">しき</text><text x="28" y="50" text-anchor="middle" font-size="35" font-weight="bold" fill="#27334a">式</text>');
  let marks=[];
  if(plan){marks=[...plan.base];for(let i=0;i<state.index;i++)marks.push(...plan.steps[i].marks);if(c?.borrowed)marks.push(...c.marks.filter(m=>m.kind?.startsWith('borrow')));const cleaned=[];for(const m of marks){if(m.kind==='clear-carry'){for(let j=cleaned.length-1;j>=0;j--)if(['carry','carry-down'].includes(cleaned[j].kind))cleaned.splice(j,1);}else{const old=cleaned.findIndex(x=>x.row===m.row&&x.col===m.col&&x.kind===m.kind);if(old>=0)cleaned.splice(old,1);cleaned.push(m);}}marks=cleaned;}
@@ -35,7 +35,7 @@ function render({paper=true}={}){
  const done=plan&&state.index>=plan.steps.length;
  $('entry').classList.toggle('hidden',!!done);
  const row=c?.row||0,col=c?.col||1,width=plan?Math.max(1,state.input.length):9;
- Object.assign($('entry').style,{top:(row/13*100)+'%',left:((col-(plan?width-1:0))/18*100)+'%',width:(width/18*100)+'%'});
+ Object.assign($('entry').style,{top:(row/12*100)+'%',left:((col-(plan?width-1:0))/16*100)+'%',width:(width/16*100)+'%'});
  $('entry').textContent=plan?state.input:display(state.formula);
  let message=feedback||(!plan?(state.formula?'入れたら「けってい」を おそう。':'まず <ruby>赤<rt>あか</rt></ruby>い わくに <ruby>式<rt>しき</rt></ruby>を <ruby>入<rt>い</rt></ruby>れよう'):done?'ぜんぶ できたね！<br>よく がんばりました。':escape(c.message));
  $('message').innerHTML=`${plan&&!done?`<span class="progress">${state.index+1} / ${plan.steps.length} ステップ</span>`:''}<span class="${feedbackType}">${message}</span>`;
@@ -76,7 +76,7 @@ function completion(){modal(`<div class="celebrate">✦ できたね！ ✦</div
 function confetti(){const el=document.createElement('div');el.className='confetti';for(let i=0;i<50;i++){const p=document.createElement('i');p.style.cssText=`left:${Math.random()*100}%;background:${['#6bc6ce','#f2bb5c','#b7a0df','#f3a7b7'][i%4]};animation-delay:${Math.random()*.7}s`;el.append(p);}document.body.append(el);setTimeout(()=>el.remove(),4000);}
 function showSettings(){
  const group=(label,name,values)=>`<h3>${label}</h3><div class="options">${values.map(([v,t])=>`<button data-setting="${name}" data-value="${v}" aria-pressed="${String(settings[name])===v}">${t}</button>`).join('')}</div>`;
- modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.1.0<br>つくった人：ささっきー</p>`);
+ modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.2.0<br>つくった人：ささっきー</p>`);
 }
 function hint(){
  const c=current();if(!c)return;
@@ -111,3 +111,24 @@ $('actions').addEventListener('click',action);$('dialog-content').addEventListen
 $('dialog').addEventListener('click',e=>{if(e.target===$('dialog')){const r=$('dialog').getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)close();}});
 document.addEventListener('keydown',e=>{if($('dialog').open)return;const k=e.key==='Delete'?'Backspace':e.key==='x'?'*':e.key;if(/^[0-9+\-*/]$/.test(k)||['Enter','Backspace'].includes(k)){e.preventDefault();key(k);}});
 render();
+
+// Keep the complete workspace visible, including inside a Canva iframe.
+// Measure the unscaled layout so zoom never compounds when the size changes.
+let fitFrame;
+function fitToScreen(){
+ cancelAnimationFrame(fitFrame);
+ fitFrame=requestAnimationFrame(()=>{
+  const app=$('app');
+  const viewportWidth=document.documentElement.clientWidth;
+  const viewportHeight=window.visualViewport?.height||window.innerHeight;
+  const naturalWidth=viewportWidth<=800?Math.max(320,(viewportWidth-24)/.9):1440;
+  app.style.width=naturalWidth+'px';
+  const scale=Math.min(.9,(viewportWidth-24)/naturalWidth,(viewportHeight-24)/app.offsetHeight);
+  app.style.setProperty('--app-scale',Math.max(.1,scale));
+ });
+}
+window.addEventListener('resize',fitToScreen);
+window.visualViewport?.addEventListener('resize',fitToScreen);
+new ResizeObserver(fitToScreen).observe($('app'));
+document.fonts?.ready.then(fitToScreen);
+fitToScreen();
