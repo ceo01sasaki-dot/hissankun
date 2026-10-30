@@ -21,6 +21,8 @@ assert not re.search(r'<(?:script|link)\b[^>]*(?:src|href)=', html), 'External d
 output = root / 'downloads'
 output.mkdir(exist_ok=True)
 (output / 'hissankun.html').write_text(html)
+(output / f'hissankun-v{version}.html').write_text(html)
 with ZipFile(output / 'hissankun.zip', 'w', ZIP_DEFLATED) as archive:
     archive.writestr('hissankun.html', html)
+(output / f'hissankun-v{version}.zip').write_bytes((output / 'hissankun.zip').read_bytes())
 print(f'Standalone HTML and ZIP generated: version {version}')
