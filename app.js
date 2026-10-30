@@ -1,5 +1,5 @@
-import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.4.0';
-import {createSoundPlayer} from './sound.js?v=1.4.0';
+import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.5.0';
+import {createSoundPlayer} from './sound.js?v=1.5.0';
 const $=id=>document.getElementById(id),storageKey='sasakky-hissan-v1';
 let settings={carry:'up',borrow:'up',sound:true},state={formula:'',problem:null,index:0,input:''},history=[],future=[],plan=null,feedback='',feedbackType='',timer;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -100,7 +100,7 @@ function completion(){modal(`<div class="celebrate">✦ できたね！ ✦</div
 function confetti(){const el=document.createElement('div');el.className='confetti';for(let i=0;i<50;i++){const p=document.createElement('i');p.style.cssText=`left:${Math.random()*100}%;background:${['#6bc6ce','#f2bb5c','#b7a0df','#f3a7b7'][i%4]};animation-delay:${Math.random()*.7}s`;el.append(p);}document.body.append(el);setTimeout(()=>el.remove(),4000);}
 function showSettings(){
  const group=(label,name,values)=>`<h3>${label}</h3><div class="options">${values.map(([v,t])=>`<button data-setting="${name}" data-value="${v}" aria-pressed="${String(settings[name])===v}">${t}</button>`).join('')}</div>`;
- modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.4.0<br>つくった人：ささっきー</p>`);
+ modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.5.0<br>つくった人：ささっきー</p>`);
 }
 function hint(){
  const c=current();if(!c)return;
@@ -136,7 +136,7 @@ $('dialog').addEventListener('click',e=>{if(e.target===$('dialog')){const r=$('d
 document.addEventListener('keydown',e=>{if($('dialog').open)return;const k=e.key==='Delete'?'Backspace':e.key==='x'?'*':e.key;if(/^[0-9+\-*/]$/.test(k)||['Enter','Backspace'].includes(k)){e.preventDefault();key(k);}});
 render();
 
-// Keep the complete workspace visible, including inside a Canva iframe.
+// Use a compact workspace first; only scale for genuinely smaller windows.
 // Measure the unscaled layout so zoom never compounds when the size changes.
 let fitFrame;
 function fitToScreen(){
@@ -145,9 +145,9 @@ function fitToScreen(){
   const app=$('app');
   const viewportWidth=document.documentElement.clientWidth;
   const viewportHeight=window.visualViewport?.height||window.innerHeight;
-  const naturalWidth=viewportWidth<=800?Math.max(320,(viewportWidth-24)/.9):1440;
+  const naturalWidth=viewportWidth<=760?Math.max(320,viewportWidth-20):Math.min(900,viewportWidth-32);
   app.style.width=naturalWidth+'px';
-  const scale=Math.min(.9,(viewportWidth-40)/naturalWidth,(viewportHeight-48)/Math.max(app.offsetHeight,app.scrollHeight));
+  const scale=Math.min(1,(viewportWidth-24)/naturalWidth,(viewportHeight-32)/Math.max(app.offsetHeight,app.scrollHeight));
   app.style.setProperty('--app-scale',Math.max(.1,scale));
  });
 }
