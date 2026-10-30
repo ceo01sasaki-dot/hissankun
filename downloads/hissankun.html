@@ -20,7 +20,7 @@ nav{display:flex;gap:8px;align-items:center}
 #paper{position:relative;width:100%;aspect-ratio:840/616;background:white;border:2px solid #2799cc;container-type:inline-size}
 #grid{width:100%;height:100%;overflow:visible;display:block}
 #entry{position:absolute;border:3px solid #ff4559;box-shadow:0 0 6px #f4465b66;border-radius:3px;min-width:6.6667%;height:9.0909%;display:flex;align-items:center;color:#ff4256;font-size:5.11905cqw;font-weight:700;line-height:1;padding:0 4px;white-space:nowrap;pointer-events:none}
-#entry:after{content:'';width:2px;height:1em;background:#ff4559;align-self:center;flex-shrink:0;margin-left:2px;animation:blink 1s infinite}
+#entry:after{content:'';width:2px;height:1em;background:#ff4559;align-self:center;flex-shrink:0;margin-left:2px;animation:blink 1s step-end infinite}
 #entry.hidden{display:none}
 #entry.numeric{padding:0;gap:0}
 #entry.numeric .input-digit{flex:0 0 calc(100% / var(--input-cells));text-align:center}
@@ -28,7 +28,8 @@ nav{display:flex;gap:8px;align-items:center}
 .paper-foot{display:flex;justify-content:space-between;margin-top:13px;color:#2991bf;font-size:10px}
 .paper-foot span:first-child{color:#98a4b7;font-weight:bold}
 aside{min-width:0}
-.bubble{background:#eae7d9;border-radius:22px;padding:12px 14px;min-height:104px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:7px;margin:0}
+.bubble{background:#eae7d9;border-radius:22px;padding:12px 14px;height:212px;min-height:212px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:7px;margin:0}
+.bubble.has-division{height:264px;min-height:264px}
 .bubble:after{content:'';position:absolute;left:25px;bottom:-18px;border-top:23px solid #eae7d9;border-right:23px solid transparent}
 #message{font-size:20px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
 #message .error{color:#c2434d}#message .success{color:#168349}#message small{display:block;font-size:.7em}
@@ -63,17 +64,17 @@ dialog .close{display:block;margin:22px auto 12px;min-width:160px;font-size:22px
 .times-hint{margin:18px 0;padding:16px;border-radius:16px;background:#f0f5f8}.times-hint h3{margin:0 0 12px;text-align:center}.times-row{font-size:26px;line-height:1.8;text-align:center;color:#687786;border-radius:10px;font-variant-numeric:tabular-nums}.times-row.current{background:#fff0b5;border:2px solid #e6bf53;color:#263344;font-weight:800}.times-note{text-align:center;font-size:18px!important}
 .celebrate{text-align:center;font-size:40px;color:#149463}.answer-text{text-align:center;font-size:30px!important;font-weight:bold}
 .hop{animation:hop .45s ease}.shake{animation:shake .25s linear}.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}.confetti i{position:absolute;width:9px;height:14px;top:-20px;animation:fall 2.8s linear forwards}
-@keyframes blink{50%{opacity:0}}@keyframes hop{50%{transform:translateY(-12px) rotate(-5deg)}}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}@keyframes fall{to{transform:translateY(100vh) rotate(500deg)}}
+@keyframes blink{50%{opacity:0}}@keyframes hop{50%{transform:translateY(-12px) rotate(0deg)}}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}@keyframes fall{to{transform:translateY(100vh) rotate(500deg)}}
 @media(max-width:1000px) and (min-width:761px){h1{font-size:32px}nav .gloss{font-size:16px;padding:7px 9px}.workspace{grid-template-columns:minmax(0,1fr) 300px;gap:14px}#message{font-size:20px}.bubble{padding:14px 16px}}
 @media(max-width:760px){
- body{padding:8px}#app{padding:12px;border-radius:10px}header{flex-direction:column;gap:10px;margin-bottom:15px}h1{font-size:28px}nav{width:100%;gap:6px}nav .gloss{flex:1;font-size:13px;padding:6px 3px}.workspace{display:flex;flex-direction:column;gap:12px}.paper-area{width:100%}.paper-foot{margin-top:10px;font-size:9px}aside{width:100%}.bubble{padding:12px 14px;min-height:84px;border-radius:16px;gap:7px}#message{font-size:18px;line-height:1.4}.progress{font-size:11px}.controls{margin-top:12px;grid-template-columns:64px minmax(0,1fr);gap:10px}.mascot svg{max-height:90px}.keypad{gap:6px}.keypad .gloss{font-size:24px;min-height:38px;padding:3px 0}.keypad .confirm{font-size:21px;min-height:40px}#actions button{font-size:14px;padding:6px 9px}.operand-legend{font-size:12px}.division-flow span{font-size:11px}footer{font-size:9px;margin-top:10px}dialog{padding:20px}dialog .options button{font-size:15px}
+ body{padding:8px}#app{padding:12px;border-radius:10px}header{flex-direction:column;gap:10px;margin-bottom:15px}h1{font-size:28px}nav{width:100%;gap:6px}nav .gloss{flex:1;font-size:13px;padding:6px 3px}.workspace{display:flex;flex-direction:column;gap:12px}.paper-area{width:100%}.paper-foot{margin-top:10px;font-size:9px}aside{width:100%}.bubble{padding:12px 14px;height:180px;min-height:180px;border-radius:16px;gap:7px}.bubble.has-division{height:250px;min-height:250px}#message{font-size:18px;line-height:1.4}.progress{font-size:11px}.controls{margin-top:12px;grid-template-columns:64px minmax(0,1fr);gap:10px}.mascot svg{max-height:90px}.keypad{gap:6px}.keypad .gloss{font-size:24px;min-height:38px;padding:3px 0}.keypad .confirm{font-size:21px;min-height:40px}#actions button{font-size:14px;padding:6px 9px}.operand-legend{font-size:12px}.division-flow span{font-size:11px}footer{font-size:9px;margin-top:10px}dialog{padding:20px}dialog .options button{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
 
 </style></head>
 <body><main id="app" aria-label="ひっ算おたすけ君">
 <header><h1>ひっ<ruby>算<rt>さん</rt></ruby>おたすけ<ruby>君<rt>くん</rt></ruby></h1><nav aria-label="学習の操作"><button class="gloss gray" id="undo">〈 もどす</button><button class="gloss gray" id="redo">すすむ 〉</button><button class="gloss sand" id="reset">↶ リセット</button><button class="gloss purple" id="settings">⚙ せってい</button></nav></header>
-<section class="workspace"><div class="paper-area"><div id="paper"><svg id="grid" viewBox="0 0 840 616" role="img" aria-label="筆算を書く方眼紙"></svg><div id="entry" aria-label="現在の入力"></div></div><div class="paper-foot"><span>ver 1.5.0 · ささっきー</span><span>（5mm方眼）</span></div></div>
+<section class="workspace"><div class="paper-area"><div id="paper"><svg id="grid" viewBox="0 0 840 616" role="img" aria-label="筆算を書く方眼紙"></svg><div id="entry" aria-label="現在の入力"></div></div><div class="paper-foot"><span>ver 1.6.0 · ささっきー</span><span>（5mm方眼）</span></div></div>
 <aside><div class="bubble" aria-live="polite"><div id="operand-legend" class="operand-legend" hidden><span>わられる数</span><span>わる数</span></div><div id="division-flow" class="division-flow" aria-label="わり算のじゅんばん" hidden><span data-phase="quotient">たてる</span><span data-phase="product">かける</span><span data-phase="subtract">ひく</span><span data-phase="bring-down">おろす</span></div><div id="message"></div><div id="actions"></div></div><div class="controls"><div class="mascot" id="mascot" role="img" aria-label="水色の小鳥の先生"><svg viewBox="0 0 180 210"><path d="M42 113Q13 100 17 130Q16 150 46 151M137 111Q164 97 163 120Q168 142 141 150" fill="#b6e3e6" stroke="#4b8f9e" stroke-width="3"/><path d="M55 168L49 183L70 177M109 175L130 184L123 166" fill="#f5c579" stroke="#aa8455" stroke-width="3"/><path d="M46 65Q36 37 58 44L77 59Q88 22 99 51Q126 30 130 59Q155 78 151 117Q150 174 93 177Q31 175 30 126Q26 89 46 65Z" fill="#d8f1ee" stroke="#4b8f9e" stroke-width="3"/><ellipse cx="91" cy="140" rx="37" ry="30" fill="#f6fcf5"/><ellipse cx="64" cy="103" rx="6" ry="10" fill="#325464"/><ellipse cx="117" cy="103" rx="6" ry="10" fill="#325464"/><circle cx="66" cy="100" r="2" fill="white"/><circle cx="119" cy="100" r="2" fill="white"/><path d="M80 114Q91 103 102 114L91 126Z" fill="#edb55f" stroke="#aa8455" stroke-width="2"/><ellipse cx="48" cy="119" rx="10" ry="6" fill="#efbec6"/><ellipse cx="133" cy="119" rx="10" ry="6" fill="#efbec6"/></svg><span>いっしょに やろう！</span></div><div class="keypad" id="keypad" aria-label="数字と計算のキーボード"></div></div></aside></section>
 <footer><span id="status">じぶんの ペースで、ひとつずつ。</span><span>つくった人：ささっきー</span></footer></main>
 <dialog id="dialog" aria-labelledby="dialog-title"><div id="dialog-content"></div></dialog><script>
@@ -237,6 +238,8 @@ let settings={carry:'up',borrow:'up',sound:true},state={formula:'',problem:null,
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const display=s=>[...s].map(c=>symbols[c]||c).join('');
 const copy=s=>structuredClone(s);
+const renderedHTML=new WeakMap();
+function setHTML(id,html){const el=$(id);if(renderedHTML.get(el)!==html){el.innerHTML=html;renderedHTML.set(el,html);}}
 try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved){settings={...settings,...saved.settings};if(saved.state&&typeof saved.state.formula==='string'){state=saved.state;if(state.problem){const p=parseFormula(`${state.problem.a}${state.problem.op}${state.problem.b}`);if(p.error)throw Error();state.problem=p;plan=buildPlan(p,settings);if(p.op==='/'&&state.divisionVersion!==2){state.index=0;state.input='';state.divisionVersion=2;}if(!Number.isInteger(state.index)||state.index<0||state.index>plan.steps.length)state.index=0;}}}}catch{state={formula:'',problem:null,index:0,input:''};plan=null;}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify({settings,state}));}catch{}}
 function snapshot(){history.push(copy(state));if(history.length>200)history.shift();future=[];}
@@ -248,12 +251,14 @@ function fail(text){stopFeedback();feedback=text;feedbackType='error';sound('err
 const current=()=>plan?.steps[state.index];
 function render({paper=true}={}){
  const c=current();
+ document.querySelector('.bubble').classList.toggle('has-division',!!plan&&state.problem.op==='/');
  if(paper){
  const svg=[];
- svg.push('<defs><marker id="down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#258b9e"/></marker><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" stroke-width="1.5"/></pattern></defs><rect width="840" height="616" fill="url(#big)"/>');
+ svg.push('<defs><marker id="down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#258b9e"/></marker><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" shape-rendering="crispEdges" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" shape-rendering="crispEdges" stroke-width="1"/></pattern></defs><rect width="840" height="616" fill="url(#big)"/>');
  for(let n=5;n<=25;n+=5){svg.push(`<text x="${n*28}" y="-7" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="${n*28}" y="634" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text>`);}
  for(let n=5;n<=20;n+=5)svg.push(`<text x="-8" y="${n*28+4}" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="850" y="${n*28+4}" fill="#2997c8" font-size="13">${n}</text>`);
  svg.push('<text x="28" y="20" text-anchor="middle" font-size="12" fill="#27334a">しき</text><text x="28" y="50" text-anchor="middle" font-size="35" font-weight="bold" fill="#27334a">式</text>');
+ const staticPaper=svg.join('');svg.length=0;
  let marks=[];
  if(plan){marks=[...plan.base];for(let i=0;i<state.index;i++)marks.push(...plan.steps[i].marks);if(c?.borrowed)marks.push(...c.marks.filter(m=>m.kind?.startsWith('borrow')));const cleaned=[];for(const m of marks){if(m.kind==='clear-carry'){for(let j=cleaned.length-1;j>=0;j--)if(['carry','carry-down'].includes(cleaned[j].kind))cleaned.splice(j,1);}else{const old=cleaned.findIndex(x=>x.row===m.row&&x.col===m.col&&x.kind===m.kind);if(old>=0)cleaned.splice(old,1);cleaned.push(m);}}marks=cleaned;}
  if(c)for(const [row,col]of (c.highlight||[]).filter(([r,k])=>!Object.values(c.operandHighlights||{}).flat().some(([a,b])=>r===a&&k===b)))svg.push(`<rect x="${col*56+2}" y="${row*56+2}" width="52" height="52" rx="6" fill="#ffdc6270"/>`);
@@ -275,7 +280,8 @@ function render({paper=true}={}){
   const left=quotientCells[0].col*56,right=(quotientCells.at(-1).col+1)*56;
   svg.push(`<rect data-mark="quotient-result" x="${left+2}" y="${quotientCells[0].row*56+2}" width="${right-left-4}" height="52" rx="20" fill="none" stroke="#ef6274" stroke-width="3"/>`);
  }
- $('grid').innerHTML=svg.join('');
+ if(!$('calculation'))$('grid').innerHTML=staticPaper+'<g id="calculation"></g>';
+ setHTML('calculation',svg.join(''));
  }
  const done=plan&&state.index>=plan.steps.length;
  $('entry').classList.toggle('hidden',!!done||c?.type==='info');
@@ -284,11 +290,11 @@ function render({paper=true}={}){
  Object.assign($('entry').style,{top:(row/11*100)+'%',left:((col-(plan?width-1:0))/15*100)+'%',width:(width/15*100)+'%'});
  $('entry').style.setProperty('--input-cells',width);
  $('entry').setAttribute('aria-label','現在の入力：'+(plan?state.input:display(state.formula)));
- if(plan){$('entry').innerHTML=Array.from({length:width-state.input.length},()=>'<span class="input-digit" aria-hidden="true"></span>').join('')+[...state.input].map(d=>`<span class="input-digit">${escape(d)}</span>`).join('');}
+ if(plan){setHTML('entry',Array.from({length:width-state.input.length},()=>'<span class="input-digit" aria-hidden="true"></span>').join('')+[...state.input].map(d=>`<span class="input-digit">${escape(d)}</span>`).join(''));}
  else $('entry').textContent=display(state.formula);
  let message=feedback||(!plan?(state.formula?'入れたら「けってい」を おそう。':'まず <ruby>赤<rt>あか</rt></ruby>い わくに <ruby>式<rt>しき</rt></ruby>を <ruby>入<rt>い</rt></ruby>れよう'):done?'ぜんぶ できたね！<br>よく がんばりました。':escape(c.message));
- $('message').innerHTML=`${plan&&!done?`<span class="progress">${state.index+1} / ${plan.steps.length} ステップ</span>`:''}<span class="${feedbackType}">${message}</span>`;
- $('actions').innerHTML=done?'<button class="gloss green" data-action="new">あたらしい式</button><button class="gloss gray" data-action="retry">もういちど</button>':c?.type==='info'?'<button class="gloss green" data-action="next">つぎへ 〉</button>':plan?'<button class="gloss pink" data-action="hint">アシストを みる？</button>':'';
+ setHTML('message',`${plan&&!done?`<span class="progress">${state.index+1} / ${plan.steps.length} ステップ</span>`:''}<span class="${feedbackType}">${message}</span>`);
+ setHTML('actions',done?'<button class="gloss green" data-action="new">あたらしい式</button><button class="gloss gray" data-action="retry">もういちど</button>':c?.type==='info'?'<button class="gloss green" data-action="next">つぎへ 〉</button>':plan?'<button class="gloss pink" data-action="hint">アシストを みる？</button>':'');
  $('undo').disabled=history.length===0;$('redo').disabled=future.length===0;
  document.querySelectorAll('[data-key]').forEach(button=>{button.disabled=!!done||(!!plan&&'+-*/'.includes(button.dataset.key))||(c?.type==='info'&&button.dataset.key!=='Enter');});
  const legend=$('operand-legend');legend.hidden=!plan||state.problem.op!=='/'||!!done;
@@ -322,7 +328,7 @@ function confirm(){
   snapshot();state.input='';return fail(message);
  }
  snapshot();state.index++;state.input='';feedback=c.success||'せいかい！ そのちょうし！';feedbackType='success';sound('ok');animate('mascot','hop');render();clearTimeout(timer);
- if(!current()){sound('clear');confetti();timer=setTimeout(()=>{stopFeedback();render();completion();},800);}else timer=setTimeout(()=>{stopFeedback();render();},1100);
+ if(!current()){sound('clear');confetti();timer=setTimeout(()=>{stopFeedback();render({paper:false});completion();},800);}else timer=setTimeout(()=>{stopFeedback();render({paper:false});},1100);
 }
 function reset(){snapshot();stopFeedback();state={formula:'',problem:null,index:0,input:''};plan=null;render();}
 function restore(s){state=s;plan=state.problem?buildPlan(state.problem,settings):null;stopFeedback();render();}
@@ -332,7 +338,7 @@ function completion(){modal(`<div class="celebrate">✦ できたね！ ✦</div
 function confetti(){const el=document.createElement('div');el.className='confetti';for(let i=0;i<50;i++){const p=document.createElement('i');p.style.cssText=`left:${Math.random()*100}%;background:${['#6bc6ce','#f2bb5c','#b7a0df','#f3a7b7'][i%4]};animation-delay:${Math.random()*.7}s`;el.append(p);}document.body.append(el);setTimeout(()=>el.remove(),4000);}
 function showSettings(){
  const group=(label,name,values)=>`<h3>${label}</h3><div class="options">${values.map(([v,t])=>`<button data-setting="${name}" data-value="${v}" aria-pressed="${String(settings[name])===v}">${t}</button>`).join('')}</div>`;
- modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.5.0<br>つくった人：ささっきー</p>`);
+ modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.6.0<br>つくった人：ささっきー</p>`);
 }
 function hint(){
  const c=current();if(!c)return;
@@ -370,7 +376,7 @@ render();
 
 // Use a compact workspace first; only scale for genuinely smaller windows.
 // Measure the unscaled layout so zoom never compounds when the size changes.
-let fitFrame;
+let fitFrame,lastFitViewport='';
 function fitToScreen(){
  cancelAnimationFrame(fitFrame);
  fitFrame=requestAnimationFrame(()=>{
@@ -378,9 +384,14 @@ function fitToScreen(){
   const viewportWidth=document.documentElement.clientWidth;
   const viewportHeight=window.visualViewport?.height||window.innerHeight;
   const naturalWidth=viewportWidth<=760?Math.max(320,viewportWidth-20):Math.min(900,viewportWidth-32);
-  app.style.width=naturalWidth+'px';
+  if(app.style.width!==naturalWidth+'px')app.style.width=naturalWidth+'px';
   const scale=Math.min(1,(viewportWidth-24)/naturalWidth,(viewportHeight-32)/Math.max(app.offsetHeight,app.scrollHeight));
-  app.style.setProperty('--app-scale',Math.max(.1,scale));
+  const rounded=Math.max(.1,Math.floor(scale*100)/100);
+  const viewportKey=viewportWidth+'x'+Math.round(viewportHeight);
+  const previous=Number(app.style.getPropertyValue('--app-scale'));
+  // Ignore tiny font/layout rounding changes; otherwise zoom can oscillate.
+  if(viewportKey!==lastFitViewport||!previous||Math.abs(previous-rounded)>.015)app.style.setProperty('--app-scale',rounded);
+  lastFitViewport=viewportKey;
  });
 }
 window.addEventListener('resize',fitToScreen);

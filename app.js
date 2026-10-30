@@ -1,10 +1,12 @@
-import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.5.0';
-import {createSoundPlayer} from './sound.js?v=1.5.0';
+import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.6.0';
+import {createSoundPlayer} from './sound.js?v=1.6.0';
 const $=id=>document.getElementById(id),storageKey='sasakky-hissan-v1';
 let settings={carry:'up',borrow:'up',sound:true},state={formula:'',problem:null,index:0,input:''},history=[],future=[],plan=null,feedback='',feedbackType='',timer;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const display=s=>[...s].map(c=>symbols[c]||c).join('');
 const copy=s=>structuredClone(s);
+const renderedHTML=new WeakMap();
+function setHTML(id,html){const el=$(id);if(renderedHTML.get(el)!==html){el.innerHTML=html;renderedHTML.set(el,html);}}
 try{const saved=JSON.parse(localStorage.getItem(storageKey));if(saved){settings={...settings,...saved.settings};if(saved.state&&typeof saved.state.formula==='string'){state=saved.state;if(state.problem){const p=parseFormula(`${state.problem.a}${state.problem.op}${state.problem.b}`);if(p.error)throw Error();state.problem=p;plan=buildPlan(p,settings);if(p.op==='/'&&state.divisionVersion!==2){state.index=0;state.input='';state.divisionVersion=2;}if(!Number.isInteger(state.index)||state.index<0||state.index>plan.steps.length)state.index=0;}}}}catch{state={formula:'',problem:null,index:0,input:''};plan=null;}
 function save(){try{localStorage.setItem(storageKey,JSON.stringify({settings,state}));}catch{}}
 function snapshot(){history.push(copy(state));if(history.length>200)history.shift();future=[];}
@@ -16,12 +18,14 @@ function fail(text){stopFeedback();feedback=text;feedbackType='error';sound('err
 const current=()=>plan?.steps[state.index];
 function render({paper=true}={}){
  const c=current();
+ document.querySelector('.bubble').classList.toggle('has-division',!!plan&&state.problem.op==='/');
  if(paper){
  const svg=[];
- svg.push('<defs><marker id="down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#258b9e"/></marker><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" stroke-width="1.5"/></pattern></defs><rect width="840" height="616" fill="url(#big)"/>');
+ svg.push('<defs><marker id="down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#258b9e"/></marker><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" shape-rendering="crispEdges" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" shape-rendering="crispEdges" stroke-width="1"/></pattern></defs><rect width="840" height="616" fill="url(#big)"/>');
  for(let n=5;n<=25;n+=5){svg.push(`<text x="${n*28}" y="-7" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="${n*28}" y="634" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text>`);}
  for(let n=5;n<=20;n+=5)svg.push(`<text x="-8" y="${n*28+4}" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="850" y="${n*28+4}" fill="#2997c8" font-size="13">${n}</text>`);
  svg.push('<text x="28" y="20" text-anchor="middle" font-size="12" fill="#27334a">しき</text><text x="28" y="50" text-anchor="middle" font-size="35" font-weight="bold" fill="#27334a">式</text>');
+ const staticPaper=svg.join('');svg.length=0;
  let marks=[];
  if(plan){marks=[...plan.base];for(let i=0;i<state.index;i++)marks.push(...plan.steps[i].marks);if(c?.borrowed)marks.push(...c.marks.filter(m=>m.kind?.startsWith('borrow')));const cleaned=[];for(const m of marks){if(m.kind==='clear-carry'){for(let j=cleaned.length-1;j>=0;j--)if(['carry','carry-down'].includes(cleaned[j].kind))cleaned.splice(j,1);}else{const old=cleaned.findIndex(x=>x.row===m.row&&x.col===m.col&&x.kind===m.kind);if(old>=0)cleaned.splice(old,1);cleaned.push(m);}}marks=cleaned;}
  if(c)for(const [row,col]of (c.highlight||[]).filter(([r,k])=>!Object.values(c.operandHighlights||{}).flat().some(([a,b])=>r===a&&k===b)))svg.push(`<rect x="${col*56+2}" y="${row*56+2}" width="52" height="52" rx="6" fill="#ffdc6270"/>`);
@@ -43,7 +47,8 @@ function render({paper=true}={}){
   const left=quotientCells[0].col*56,right=(quotientCells.at(-1).col+1)*56;
   svg.push(`<rect data-mark="quotient-result" x="${left+2}" y="${quotientCells[0].row*56+2}" width="${right-left-4}" height="52" rx="20" fill="none" stroke="#ef6274" stroke-width="3"/>`);
  }
- $('grid').innerHTML=svg.join('');
+ if(!$('calculation'))$('grid').innerHTML=staticPaper+'<g id="calculation"></g>';
+ setHTML('calculation',svg.join(''));
  }
  const done=plan&&state.index>=plan.steps.length;
  $('entry').classList.toggle('hidden',!!done||c?.type==='info');
@@ -52,11 +57,11 @@ function render({paper=true}={}){
  Object.assign($('entry').style,{top:(row/11*100)+'%',left:((col-(plan?width-1:0))/15*100)+'%',width:(width/15*100)+'%'});
  $('entry').style.setProperty('--input-cells',width);
  $('entry').setAttribute('aria-label','現在の入力：'+(plan?state.input:display(state.formula)));
- if(plan){$('entry').innerHTML=Array.from({length:width-state.input.length},()=>'<span class="input-digit" aria-hidden="true"></span>').join('')+[...state.input].map(d=>`<span class="input-digit">${escape(d)}</span>`).join('');}
+ if(plan){setHTML('entry',Array.from({length:width-state.input.length},()=>'<span class="input-digit" aria-hidden="true"></span>').join('')+[...state.input].map(d=>`<span class="input-digit">${escape(d)}</span>`).join(''));}
  else $('entry').textContent=display(state.formula);
  let message=feedback||(!plan?(state.formula?'入れたら「けってい」を おそう。':'まず <ruby>赤<rt>あか</rt></ruby>い わくに <ruby>式<rt>しき</rt></ruby>を <ruby>入<rt>い</rt></ruby>れよう'):done?'ぜんぶ できたね！<br>よく がんばりました。':escape(c.message));
- $('message').innerHTML=`${plan&&!done?`<span class="progress">${state.index+1} / ${plan.steps.length} ステップ</span>`:''}<span class="${feedbackType}">${message}</span>`;
- $('actions').innerHTML=done?'<button class="gloss green" data-action="new">あたらしい式</button><button class="gloss gray" data-action="retry">もういちど</button>':c?.type==='info'?'<button class="gloss green" data-action="next">つぎへ 〉</button>':plan?'<button class="gloss pink" data-action="hint">アシストを みる？</button>':'';
+ setHTML('message',`${plan&&!done?`<span class="progress">${state.index+1} / ${plan.steps.length} ステップ</span>`:''}<span class="${feedbackType}">${message}</span>`);
+ setHTML('actions',done?'<button class="gloss green" data-action="new">あたらしい式</button><button class="gloss gray" data-action="retry">もういちど</button>':c?.type==='info'?'<button class="gloss green" data-action="next">つぎへ 〉</button>':plan?'<button class="gloss pink" data-action="hint">アシストを みる？</button>':'');
  $('undo').disabled=history.length===0;$('redo').disabled=future.length===0;
  document.querySelectorAll('[data-key]').forEach(button=>{button.disabled=!!done||(!!plan&&'+-*/'.includes(button.dataset.key))||(c?.type==='info'&&button.dataset.key!=='Enter');});
  const legend=$('operand-legend');legend.hidden=!plan||state.problem.op!=='/'||!!done;
@@ -90,7 +95,7 @@ function confirm(){
   snapshot();state.input='';return fail(message);
  }
  snapshot();state.index++;state.input='';feedback=c.success||'せいかい！ そのちょうし！';feedbackType='success';sound('ok');animate('mascot','hop');render();clearTimeout(timer);
- if(!current()){sound('clear');confetti();timer=setTimeout(()=>{stopFeedback();render();completion();},800);}else timer=setTimeout(()=>{stopFeedback();render();},1100);
+ if(!current()){sound('clear');confetti();timer=setTimeout(()=>{stopFeedback();render({paper:false});completion();},800);}else timer=setTimeout(()=>{stopFeedback();render({paper:false});},1100);
 }
 function reset(){snapshot();stopFeedback();state={formula:'',problem:null,index:0,input:''};plan=null;render();}
 function restore(s){state=s;plan=state.problem?buildPlan(state.problem,settings):null;stopFeedback();render();}
@@ -100,7 +105,7 @@ function completion(){modal(`<div class="celebrate">✦ できたね！ ✦</div
 function confetti(){const el=document.createElement('div');el.className='confetti';for(let i=0;i<50;i++){const p=document.createElement('i');p.style.cssText=`left:${Math.random()*100}%;background:${['#6bc6ce','#f2bb5c','#b7a0df','#f3a7b7'][i%4]};animation-delay:${Math.random()*.7}s`;el.append(p);}document.body.append(el);setTimeout(()=>el.remove(),4000);}
 function showSettings(){
  const group=(label,name,values)=>`<h3>${label}</h3><div class="options">${values.map(([v,t])=>`<button data-setting="${name}" data-value="${v}" aria-pressed="${String(settings[name])===v}">${t}</button>`).join('')}</div>`;
- modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.5.0<br>つくった人：ささっきー</p>`);
+ modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.6.0<br>つくった人：ささっきー</p>`);
 }
 function hint(){
  const c=current();if(!c)return;
@@ -138,7 +143,7 @@ render();
 
 // Use a compact workspace first; only scale for genuinely smaller windows.
 // Measure the unscaled layout so zoom never compounds when the size changes.
-let fitFrame;
+let fitFrame,lastFitViewport='';
 function fitToScreen(){
  cancelAnimationFrame(fitFrame);
  fitFrame=requestAnimationFrame(()=>{
@@ -146,9 +151,14 @@ function fitToScreen(){
   const viewportWidth=document.documentElement.clientWidth;
   const viewportHeight=window.visualViewport?.height||window.innerHeight;
   const naturalWidth=viewportWidth<=760?Math.max(320,viewportWidth-20):Math.min(900,viewportWidth-32);
-  app.style.width=naturalWidth+'px';
+  if(app.style.width!==naturalWidth+'px')app.style.width=naturalWidth+'px';
   const scale=Math.min(1,(viewportWidth-24)/naturalWidth,(viewportHeight-32)/Math.max(app.offsetHeight,app.scrollHeight));
-  app.style.setProperty('--app-scale',Math.max(.1,scale));
+  const rounded=Math.max(.1,Math.floor(scale*100)/100);
+  const viewportKey=viewportWidth+'x'+Math.round(viewportHeight);
+  const previous=Number(app.style.getPropertyValue('--app-scale'));
+  // Ignore tiny font/layout rounding changes; otherwise zoom can oscillate.
+  if(viewportKey!==lastFitViewport||!previous||Math.abs(previous-rounded)>.015)app.style.setProperty('--app-scale',rounded);
+  lastFitViewport=viewportKey;
  });
 }
 window.addEventListener('resize',fitToScreen);

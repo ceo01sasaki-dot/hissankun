@@ -18,7 +18,7 @@ nav{display:flex;gap:8px;align-items:center}
 #paper{position:relative;width:100%;aspect-ratio:840/616;background:white;border:2px solid #2799cc;container-type:inline-size}
 #grid{width:100%;height:100%;overflow:visible;display:block}
 #entry{position:absolute;border:3px solid #ff4559;box-shadow:0 0 6px #f4465b66;border-radius:3px;min-width:6.6667%;height:9.0909%;display:flex;align-items:center;color:#ff4256;font-size:5.11905cqw;font-weight:700;line-height:1;padding:0 4px;white-space:nowrap;pointer-events:none}
-#entry:after{content:'';width:2px;height:1em;background:#ff4559;align-self:center;flex-shrink:0;margin-left:2px;animation:blink 1s infinite}
+#entry:after{content:'';width:2px;height:1em;background:#ff4559;align-self:center;flex-shrink:0;margin-left:2px;animation:blink 1s step-end infinite}
 #entry.hidden{display:none}
 #entry.numeric{padding:0;gap:0}
 #entry.numeric .input-digit{flex:0 0 calc(100% / var(--input-cells));text-align:center}
@@ -26,7 +26,8 @@ nav{display:flex;gap:8px;align-items:center}
 .paper-foot{display:flex;justify-content:space-between;margin-top:13px;color:#2991bf;font-size:10px}
 .paper-foot span:first-child{color:#98a4b7;font-weight:bold}
 aside{min-width:0}
-.bubble{background:#eae7d9;border-radius:22px;padding:12px 14px;min-height:104px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:7px;margin:0}
+.bubble{background:#eae7d9;border-radius:22px;padding:12px 14px;height:212px;min-height:212px;position:relative;display:flex;flex-direction:column;justify-content:center;gap:7px;margin:0}
+.bubble.has-division{height:264px;min-height:264px}
 .bubble:after{content:'';position:absolute;left:25px;bottom:-18px;border-top:23px solid #eae7d9;border-right:23px solid transparent}
 #message{font-size:20px;font-weight:800;line-height:1.4;overflow-wrap:anywhere}
 #message .error{color:#c2434d}#message .success{color:#168349}#message small{display:block;font-size:.7em}
@@ -61,9 +62,9 @@ dialog .close{display:block;margin:22px auto 12px;min-width:160px;font-size:22px
 .times-hint{margin:18px 0;padding:16px;border-radius:16px;background:#f0f5f8}.times-hint h3{margin:0 0 12px;text-align:center}.times-row{font-size:26px;line-height:1.8;text-align:center;color:#687786;border-radius:10px;font-variant-numeric:tabular-nums}.times-row.current{background:#fff0b5;border:2px solid #e6bf53;color:#263344;font-weight:800}.times-note{text-align:center;font-size:18px!important}
 .celebrate{text-align:center;font-size:40px;color:#149463}.answer-text{text-align:center;font-size:30px!important;font-weight:bold}
 .hop{animation:hop .45s ease}.shake{animation:shake .25s linear}.confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}.confetti i{position:absolute;width:9px;height:14px;top:-20px;animation:fall 2.8s linear forwards}
-@keyframes blink{50%{opacity:0}}@keyframes hop{50%{transform:translateY(-12px) rotate(-5deg)}}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}@keyframes fall{to{transform:translateY(100vh) rotate(500deg)}}
+@keyframes blink{50%{opacity:0}}@keyframes hop{50%{transform:translateY(-12px) rotate(0deg)}}@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}@keyframes fall{to{transform:translateY(100vh) rotate(500deg)}}
 @media(max-width:1000px) and (min-width:761px){h1{font-size:32px}nav .gloss{font-size:16px;padding:7px 9px}.workspace{grid-template-columns:minmax(0,1fr) 300px;gap:14px}#message{font-size:20px}.bubble{padding:14px 16px}}
 @media(max-width:760px){
- body{padding:8px}#app{padding:12px;border-radius:10px}header{flex-direction:column;gap:10px;margin-bottom:15px}h1{font-size:28px}nav{width:100%;gap:6px}nav .gloss{flex:1;font-size:13px;padding:6px 3px}.workspace{display:flex;flex-direction:column;gap:12px}.paper-area{width:100%}.paper-foot{margin-top:10px;font-size:9px}aside{width:100%}.bubble{padding:12px 14px;min-height:84px;border-radius:16px;gap:7px}#message{font-size:18px;line-height:1.4}.progress{font-size:11px}.controls{margin-top:12px;grid-template-columns:64px minmax(0,1fr);gap:10px}.mascot svg{max-height:90px}.keypad{gap:6px}.keypad .gloss{font-size:24px;min-height:38px;padding:3px 0}.keypad .confirm{font-size:21px;min-height:40px}#actions button{font-size:14px;padding:6px 9px}.operand-legend{font-size:12px}.division-flow span{font-size:11px}footer{font-size:9px;margin-top:10px}dialog{padding:20px}dialog .options button{font-size:15px}
+ body{padding:8px}#app{padding:12px;border-radius:10px}header{flex-direction:column;gap:10px;margin-bottom:15px}h1{font-size:28px}nav{width:100%;gap:6px}nav .gloss{flex:1;font-size:13px;padding:6px 3px}.workspace{display:flex;flex-direction:column;gap:12px}.paper-area{width:100%}.paper-foot{margin-top:10px;font-size:9px}aside{width:100%}.bubble{padding:12px 14px;height:180px;min-height:180px;border-radius:16px;gap:7px}.bubble.has-division{height:250px;min-height:250px}#message{font-size:18px;line-height:1.4}.progress{font-size:11px}.controls{margin-top:12px;grid-template-columns:64px minmax(0,1fr);gap:10px}.mascot svg{max-height:90px}.keypad{gap:6px}.keypad .gloss{font-size:24px;min-height:38px;padding:3px 0}.keypad .confirm{font-size:21px;min-height:40px}#actions button{font-size:14px;padding:6px 9px}.operand-legend{font-size:12px}.division-flow span{font-size:11px}footer{font-size:9px;margin-top:10px}dialog{padding:20px}dialog .options button{font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;scroll-behavior:auto!important}}
