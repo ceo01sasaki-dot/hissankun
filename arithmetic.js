@@ -18,6 +18,7 @@ export function buildPlan({a,b,op},settings={}){
  const A=String(a),B=String(b),L=Math.max(A.length,B.length),R=op==='*'?A.length+B.length+1:L+2;
  const digit=(s,k)=>Number(s[s.length-1-k]||0);
  const carryMark=(row,col,text)=>({row:settings.carry==='down'?row:2,col,text,kind:settings.carry==='down'?'carry-down':'carry'});
+ const multiplicationCarry=(row,col,text)=>({row,col,text,kind:'carry-answer'});
  const step=(expected,row,col,message,marks=[],highlight=[],extra={})=>steps.push({expected,row,col,message,marks,highlight,...extra});
  if(op!=='/'){
   put(base,A,3,R);put(base,B,4,R);base.push({row:4,col:R-L,text:symbols[op]});line(base,4,R-L,R);
@@ -37,7 +38,10 @@ export function buildPlan({a,b,op},settings={}){
   for(let k=0;k<A.length;k++){
    const y=digit(B,k),marks=[];let borrowed=false;
    if(cur[k]<y){let j=k+1;while(cur[j]===0)j++;cur[j]--;for(let z=j-1;z>k;z--)cur[z]=9;cur[k]+=10;borrowed=true;
-    for(let z=k;z<=j;z++)marks.push({row:settings.borrow==='side'?3:2,col:R-z,text:cur[z],kind:settings.borrow==='side'?'borrow-side':'borrow'});
+    for(let z=k;z<=j;z++){
+     marks.push({row:settings.borrow==='side'?3:2,col:R-z,text:cur[z],kind:settings.borrow==='side'?'borrow-side':'borrow'});
+     if(z>k)marks.push({row:3,col:R-z,kind:'strike'});
+    }
    }
    const x=cur[k],v=x-y;if(k<String(a-b).length)put(marks,v,5,R-k,'answer');
    step(v,5,R-k,`${places[k]}の位。${borrowed?'左の位から 1を かりて、':''}${x}−${y}を しよう。`,marks,[[3,R-k],[4,R-k]],{hint:`${borrowed?'1つ上の位の 1は、この位の 10と 同じだよ。':''}${x}こから ${y}こを とると いくつかな？`,parts:[x,y],borrowed});
@@ -50,7 +54,7 @@ export function buildPlan({a,b,op},settings={}){
    for(let k=0;k<A.length;k++){
     const x=digit(A,k),v=x*y+carry,marks=[];put(marks,k===A.length-1?v:v%10,row,R-k-j,'answer');
     if(k===0&&j>0)marks.unshift({kind:'clear-carry'});
-    if(v>=10&&k<A.length-1)marks.push(carryMark(row,R-k-j-1,Math.floor(v/10)));
+    if(v>=10&&k<A.length-1)marks.push(multiplicationCarry(row,R-k-j-1,Math.floor(v/10)));
     step(v,row,R-k-j,`${places[j]}の位の ${y}を かけよう。${x}×${y}${carry?'＋'+carry+'（くりあがり）':''}は？`,marks,[[3,R-k],[4,R-j]],{hint:`${x}が ${y}こ分だよ。${carry?'さいごに '+carry+'を たそう。':''}`,parts:[x,y,carry],table:{base:y,factor:x,carry}});carry=Math.floor(v/10);
    }
    for(let z=0;z<j;z++)steps.at(-1).marks.push({row,col:R-z,text:0,kind:'answer'});
@@ -58,7 +62,7 @@ export function buildPlan({a,b,op},settings={}){
   if(B.length>1){steps.at(-1).marks.push({kind:'clear-carry'});const row=5+B.length;line(steps.at(-1).marks,row-1,R-String(a*b).length,R);let carry=0;
    for(let k=0;k<String(a*b).length;k++){
     const ds=partials.map(n=>digit(String(n),k)),v=ds.reduce((s,n)=>s+n,carry),marks=[];put(marks,k===String(a*b).length-1?v:v%10,row,R-k,'answer');
-    if(v>=10&&k<String(a*b).length-1)marks.push(carryMark(row,R-k-1,Math.floor(v/10)));
+    if(v>=10&&k<String(a*b).length-1)marks.push(multiplicationCarry(row,R-k-1,Math.floor(v/10)));
     step(v,row,R-k,`さいごに たそう。${ds.join('＋')}${carry?'＋'+carry:''}は？`,marks,ds.map((_,j)=>[5+j,R-k]),{hint:'位を そろえて、右から じゅんに たそう。'});carry=Math.floor(v/10);
    }
   }

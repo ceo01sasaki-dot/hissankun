@@ -1,5 +1,5 @@
-import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.6.0';
-import {createSoundPlayer} from './sound.js?v=1.6.0';
+import {symbols,parseFormula,buildPlan} from './arithmetic.js?v=1.7.0';
+import {createSoundPlayer} from './sound.js?v=1.7.0';
 const $=id=>document.getElementById(id),storageKey='sasakky-hissan-v1';
 let settings={carry:'up',borrow:'up',sound:true},state={formula:'',problem:null,index:0,input:''},history=[],future=[],plan=null,feedback='',feedbackType='',timer;
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -21,13 +21,13 @@ function render({paper=true}={}){
  document.querySelector('.bubble').classList.toggle('has-division',!!plan&&state.problem.op==='/');
  if(paper){
  const svg=[];
- svg.push('<defs><marker id="down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#258b9e"/></marker><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" shape-rendering="crispEdges" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" shape-rendering="crispEdges" stroke-width="1"/></pattern></defs><rect width="840" height="616" fill="url(#big)"/>');
+ svg.push('<defs><marker id="down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#258b9e"/></marker><pattern id="small" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M28 0H0V28" fill="none" stroke="#83c6ee" stroke-width="1" stroke-dasharray="2 3"/></pattern><pattern id="big" width="56" height="56" patternUnits="userSpaceOnUse"><rect width="56" height="56" fill="url(#small)"/><path d="M56 0H0V56" fill="none" stroke="#299dd5" stroke-width="1"/></pattern></defs><rect width="840" height="616" fill="url(#big)"/>');
  for(let n=5;n<=25;n+=5){svg.push(`<text x="${n*28}" y="-7" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="${n*28}" y="634" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text>`);}
  for(let n=5;n<=20;n+=5)svg.push(`<text x="-8" y="${n*28+4}" text-anchor="middle" fill="#2997c8" font-size="13">${n}</text><text x="850" y="${n*28+4}" fill="#2997c8" font-size="13">${n}</text>`);
  svg.push('<text x="28" y="20" text-anchor="middle" font-size="12" fill="#27334a">しき</text><text x="28" y="50" text-anchor="middle" font-size="35" font-weight="bold" fill="#27334a">式</text>');
  const staticPaper=svg.join('');svg.length=0;
  let marks=[];
- if(plan){marks=[...plan.base];for(let i=0;i<state.index;i++)marks.push(...plan.steps[i].marks);if(c?.borrowed)marks.push(...c.marks.filter(m=>m.kind?.startsWith('borrow')));const cleaned=[];for(const m of marks){if(m.kind==='clear-carry'){for(let j=cleaned.length-1;j>=0;j--)if(['carry','carry-down'].includes(cleaned[j].kind))cleaned.splice(j,1);}else{const old=cleaned.findIndex(x=>x.row===m.row&&x.col===m.col&&x.kind===m.kind);if(old>=0)cleaned.splice(old,1);cleaned.push(m);}}marks=cleaned;}
+ if(plan){marks=[...plan.base];for(let i=0;i<state.index;i++)marks.push(...plan.steps[i].marks);if(c?.borrowed)marks.push(...c.marks.filter(m=>m.kind?.startsWith('borrow')||m.kind==='strike'));const cleaned=[];for(const m of marks){if(m.kind==='clear-carry'){for(let j=cleaned.length-1;j>=0;j--)if(['carry','carry-down'].includes(cleaned[j].kind))cleaned.splice(j,1);}else{const old=cleaned.findIndex(x=>x.row===m.row&&x.col===m.col&&x.kind===m.kind);if(old>=0)cleaned.splice(old,1);cleaned.push(m);}}marks=cleaned;}
  if(c)for(const [row,col]of (c.highlight||[]).filter(([r,k])=>!Object.values(c.operandHighlights||{}).flat().some(([a,b])=>r===a&&k===b)))svg.push(`<rect x="${col*56+2}" y="${row*56+2}" width="52" height="52" rx="6" fill="#ffdc6270"/>`);
  if(c?.operandHighlights)for(const [role,cells]of Object.entries(c.operandHighlights))for(const [row,col]of cells){
   const fill=role==='dividend'?'#ffe16b':'#9ae1f5',stroke=role==='dividend'?'#bf8b00':'#1688a9';
@@ -35,7 +35,10 @@ function render({paper=true}={}){
  }
  const formula=plan?`${state.problem.a}${state.problem.op}${state.problem.b}`:state.formula;
  if(plan)[...display(formula)].forEach((text,k)=>marks.push({row:0,col:k+1,text}));
- for(const m of marks){const x=m.col*56,y=m.row*56;if(m.kind==='line'){svg.push(`<path d="M${x} ${y+57}H${(m.end+1)*56}" stroke="#283344" stroke-width="3" stroke-linecap="round"/>`);continue;}if(m.kind==='division'){svg.push(`<path data-mark="division" d="M${x-2} ${y}H${(m.end+1)*56-4}M${x-2} ${y}Q${x+18} ${y+28} ${x-2} ${y+56}" fill="none" stroke="#283344" stroke-width="3" stroke-linecap="round"/>`);continue;}
+ for(const m of marks){const x=m.col*56,y=m.row*56;
+ if(m.kind==='strike'){svg.push(`<path data-mark="borrow-strike" data-row="${m.row}" data-col="${m.col}" d="M${x+13} ${y+47}L${x+43} ${y+8}" fill="none" stroke="#263344" stroke-width="2.5" stroke-linecap="round"/>`);continue;}
+ if(m.kind==='carry-answer'){svg.push(`<text data-kind="carry-answer" data-row="${m.row}" data-col="${m.col}" x="${x+49}" y="${y+15}" text-anchor="end" font-size="17" font-weight="600" fill="#258b9e">${escape(m.text)}</text>`);continue;}
+ if(m.kind==='line'){svg.push(`<path d="M${x} ${y+57}H${(m.end+1)*56}" stroke="#283344" stroke-width="3" stroke-linecap="round"/>`);continue;}if(m.kind==='division'){svg.push(`<path data-mark="division" d="M${x-2} ${y}H${(m.end+1)*56-4}M${x-2} ${y}Q${x+18} ${y+28} ${x-2} ${y+56}" fill="none" stroke="#283344" stroke-width="3" stroke-linecap="round"/>`);continue;}
  const small=['carry','carry-down','borrow','borrow-side'].includes(m.kind),side=m.kind?.endsWith('side')||m.kind==='carry-down';svg.push(`<text data-kind="${m.kind||'digit'}" data-row="${m.row}" data-col="${m.col}" x="${x+(side?10:28)}" y="${y+(side?18:small?49:46)}" text-anchor="middle" font-size="${small?23:43}" font-weight="${small?600:700}" fill="${small?'#258b9e':['answer','working'].includes(m.kind)?'#244a91':'#263344'}">${escape(m.text)}</text>`);
  }
  if(c?.arrow&&c.arrow.to[0]>c.arrow.from[0]){
@@ -105,7 +108,7 @@ function completion(){modal(`<div class="celebrate">✦ できたね！ ✦</div
 function confetti(){const el=document.createElement('div');el.className='confetti';for(let i=0;i<50;i++){const p=document.createElement('i');p.style.cssText=`left:${Math.random()*100}%;background:${['#6bc6ce','#f2bb5c','#b7a0df','#f3a7b7'][i%4]};animation-delay:${Math.random()*.7}s`;el.append(p);}document.body.append(el);setTimeout(()=>el.remove(),4000);}
 function showSettings(){
  const group=(label,name,values)=>`<h3>${label}</h3><div class="options">${values.map(([v,t])=>`<button data-setting="${name}" data-value="${v}" aria-pressed="${String(settings[name])===v}">${t}</button>`).join('')}</div>`;
- modal(`<h2 id="dialog-title">⚙ せってい</h2>${group('くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.6.0<br>つくった人：ささっきー</p>`);
+ modal(`<h2 id="dialog-title">⚙ せってい</h2><p>かけ算の くりあがりは、こたえのマスの みぎうえに かくよ。</p>${group('たし算の くりあがりを かく場所','carry',[['up','うえの だん'],['down','こたえの マス']])}${group('くりさがりを かく場所','borrow',[['up','うえの だん'],['side','数の みぎうえ']])}${group('こうかおん','sound',[['true','あり ♪'],['false','なし']])}<button class="gloss purple close" data-action="close">とじる</button><p class="credit">ひっ算おたすけ君 ver 1.7.0<br>つくった人：ささっきー</p>`);
 }
 function hint(){
  const c=current();if(!c)return;

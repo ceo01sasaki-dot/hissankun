@@ -67,3 +67,24 @@ test('division colors every digit of the current dividend and divisor across pha
  for(const phase of ['intro','quotient','product','subtract','bring-down'])assert.ok(p.steps.find(s=>s.phase===phase).operandHighlights);
  assert.deepEqual(plan('1005/5').steps.find(s=>s.phase==='quotient'&&s.expected===0).operandHighlights.dividend,[[2,5]]);
 });
+
+test('borrowing cancels each lending digit at the appropriate column step',()=>{
+ const p=plan('345-48');
+ assert.deepEqual(p.steps.map(s=>s.expected),[7,9,2]);
+ const strikes=k=>p.steps[k].marks.filter(m=>m.kind==='strike').map(m=>m.col);
+ assert.deepEqual(strikes(0),[4]);assert.deepEqual(strikes(1),[3]);assert.deepEqual(strikes(2),[]);
+ assert.ok(p.steps[0].borrowed&&p.steps[1].borrowed);
+ assert.equal(rowValue(p,5),297);
+ const chain=plan('402-175');assert.deepEqual(chain.steps[0].marks.filter(m=>m.kind==='strike').map(m=>m.col),[4,3]);assert.equal(rowValue(chain,5),227);
+ assert.equal(plan('987-123').steps.some(s=>s.marks.some(m=>m.kind==='strike')),false);
+});
+test('multiplication carries go into the next answer cell upper-right regardless of addition settings',()=>{
+ for(const carry of ['up','down']){
+  const p=plan('342*48',{carry});
+  assert.deepEqual(p.steps[0].marks.find(m=>m.kind==='carry-answer'),{row:5,col:5,text:1,kind:'carry-answer'});
+  assert.deepEqual(p.steps[1].marks.find(m=>m.kind==='carry-answer'),{row:5,col:4,text:3,kind:'carry-answer'});
+  assert.ok(p.steps.every(s=>s.marks.every(m=>!['carry','carry-down'].includes(m.kind))));
+  assert.equal(p.result,16416);assert.equal(rowValue(p,7),16416);
+  assert.ok(p.steps.flatMap(s=>s.marks).some(m=>m.kind==='carry-answer'&&m.row===6));
+ }
+});
